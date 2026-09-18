@@ -1,0 +1,143 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Orbitron', monospace;
+  --font-mono: 'Share Tech Mono', monospace;
+
+  --color-pcb-dark: #060e06;
+  --color-pcb-base: #0b1a0e;
+  --color-pcb-surface: #0f2414;
+  --color-pcb-panel: #112816;
+  --color-pcb-trace: #1a4a22;
+  --color-neon: #39ff14;
+  --color-neon-dim: #1dcc00;
+  --color-neon-glow: rgba(57, 255, 20, 0.15);
+  --color-electric: #00d4ff;
+  --color-copper: #b87333;
+  --color-text-main: #c8f5c8;
+  --color-text-muted: #6a9a6a;
+  --color-border: #1e5424;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-pcb-dark);
+  color: var(--color-text-main);
+  font-family: var(--font-mono);
+  min-height: 100vh;
+}
+
+/* PCB circuit board background */
+.pcb-bg {
+  background-color: var(--color-pcb-dark);
+  background-image:
+    /* Horizontal traces */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 39px,
+      rgba(26, 74, 34, 0.4) 39px,
+      rgba(26, 74, 34, 0.4) 40px
+    ),
+    /* Vertical traces */
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 39px,
+      rgba(26, 74, 34, 0.4) 39px,
+      rgba(26, 74, 34, 0.4) 40px
+    ),
+    /* Diagonal accent traces */
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 79px,
+      rgba(26, 74, 34, 0.15) 79px,
+      rgba(26, 74, 34, 0.15) 80px
+    );
+  position: relative;
+}
+
+.pcb-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Ccircle cx='40' cy='40' r='3' fill='none' stroke='%231a4a22' stroke-width='1'/%3E%3Ccircle cx='40' cy='40' r='1.5' fill='%23b87333'/%3E%3Ccircle cx='200' cy='40' r='3' fill='none' stroke='%231a4a22' stroke-width='1'/%3E%3Ccircle cx='200' cy='40' r='1.5' fill='%23b87333'/%3E%3Ccircle cx='360' cy='40' r='3' fill='none' stroke='%231a4a22' stroke-width='1'/%3E%3Ccircle cx='360' cy='40' r='1.5' fill='%23b87333'/%3E%3Ccircle cx='40' cy='200' r='3' fill='none' stroke='%231a4a22' stroke-width='1'/%3E%3Ccircle cx='40' cy='200' r='1.5' fill='%23b87333'/%3E%3Ccircle cx='120' cy='200' r='3' fill='none' stroke='%231a4a22' stroke-width='1'/%3E%3Ccircle cx='120' cy='200' r='1.5' fill='%23b87333'/%3E%3Ccircle cx='280' cy='200' r='3' fill='none' stroke='%231a4a22' stroke-width='1'/%3E%3Ccircle cx='280' cy='200' r='1.5' fill='%23b87333'/%3E%3Ccircle cx='360' cy='200' r='3' fill='none' stroke='%231a4a22' stroke-width='1'/%3E%3Ccircle cx='360' cy='200' r='1.5' fill='%23b87333'/%3E%3Ccircle cx='40' cy='360' r='3' fill='none' stroke='%231a4a22' stroke-width='1'/%3E%3Ccircle cx='40' cy='360' r='1.5' fill='%23b87333'/%3E%3Ccircle cx='200' cy='360' r='3' fill='none' stroke='%231a4a22' stroke-width='1'/%3E%3Ccircle cx='200' cy='360' r='1.5' fill='%23b87333'/%3E%3Ccircle cx='360' cy='360' r='3' fill='none' stroke='%231a4a22' stroke-width='1'/%3E%3Ccircle cx='360' cy='360' r='1.5' fill='%23b87333'/%3E%3Cline x1='40' y1='40' x2='200' y2='40' stroke='%231a4a22' stroke-width='1.5'/%3E%3Cline x1='200' y1='40' x2='200' y2='200' stroke='%231a4a22' stroke-width='1.5'/%3E%3Cline x1='360' y1='40' x2='360' y2='200' stroke='%231a4a22' stroke-width='1.5'/%3E%3Cline x1='40' y1='200' x2='120' y2='200' stroke='%231a4a22' stroke-width='1.5'/%3E%3Cline x1='280' y1='200' x2='360' y2='200' stroke='%231a4a22' stroke-width='1.5'/%3E%3Cline x1='40' y1='360' x2='40' y2='200' stroke='%231a4a22' stroke-width='1.5'/%3E%3Cline x1='200' y1='360' x2='200' y2='200' stroke='%231a4a22' stroke-width='1.5'/%3E%3Cline x1='360' y1='360' x2='360' y2='200' stroke='%231a4a22' stroke-width='1.5'/%3E%3Cline x1='40' y1='360' x2='200' y2='360' stroke='%231a4a22' stroke-width='1.5'/%3E%3Crect x='110' y='110' width='180' height='60' rx='4' fill='none' stroke='%231a4a22' stroke-width='1'/%3E%3Crect x='155' y='290' width='90' height='40' rx='4' fill='none' stroke='%231a4a22' stroke-width='1' stroke-dasharray='4 2'/%3E%3C/svg%3E");
+  background-size: 400px 400px;
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.neon-glow {
+  text-shadow: 0 0 8px rgba(57, 255, 20, 0.7), 0 0 20px rgba(57, 255, 20, 0.4);
+}
+
+.neon-border {
+  border: 1px solid var(--color-pcb-trace);
+  box-shadow: 0 0 0 1px rgba(57, 255, 20, 0.05), inset 0 0 20px rgba(0,0,0,0.4);
+}
+
+.neon-border:focus-within {
+  border-color: rgba(57, 255, 20, 0.4);
+  box-shadow: 0 0 12px rgba(57, 255, 20, 0.15), inset 0 0 20px rgba(0,0,0,0.4);
+}
+
+.input-field {
+  background: rgba(6, 14, 6, 0.8);
+  border: 1px solid var(--color-pcb-trace);
+  color: var(--color-text-main);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  padding: 0.625rem 0.875rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-field::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input-field:focus {
+  border-color: var(--color-neon-dim);
+  box-shadow: 0 0 8px rgba(57, 255, 20, 0.2);
+}
+
+.corner-bracket::before,
+.corner-bracket::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: var(--color-neon-dim);
+  border-style: solid;
+}
+
+.corner-tl::before {
+  top: -1px; left: -1px;
+  border-width: 2px 0 0 2px;
+}
+
+.corner-tr::after {
+  top: -1px; right: -1px;
+  border-width: 2px 2px 0 0;
+}
+
+.corner-bl::before {
+  bottom: -1px; left: -1px;
+  border-width: 0 0 2px 2px;
+}
