@@ -7,8 +7,6 @@ import { useState } from 'react';
 function App() {
   const [page, setPage] = useState<Page>('aluno')
   const meta = PAGE_META[page];
-  
-  console.dir(meta)
 
   return (
     <div className="pcb-bg" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
