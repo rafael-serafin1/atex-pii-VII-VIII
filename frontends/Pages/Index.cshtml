@@ -1,0 +1,142 @@
+﻿@page
+@model IndexModel
+@{
+    var wide = Model.Tela is "curso" or "agenda";
+    ViewData["Title"] = Model.Tela switch
+    {
+        "curso" => "Cadastro de Curso",
+        "agenda" => "Dias de Curso",
+        _ => "Cadastro de Aluno"
+    };
+}
+
+<header class="site-header">
+    <div class="header-inner">
+        <a class="brand" asp-page="/Index" asp-route-tela="aluno" aria-label="Arduino Fundamentals, início">
+            <span class="board-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="6" y="6" width="36" height="36" rx="5"/><path d="M18 17h-4v14h4m12-14h4v14h-4M22 33l4-18"/><circle cx="12" cy="12" r="1"/><circle cx="36" cy="36" r="1"/></svg></span>
+            <span class="brand-copy"><strong>ARDUINO FUNDAMENTALS</strong><small><span class="pin-mark" aria-hidden="true">⌖</span> NAVCODE INSTITUTO DE TECNOLOGIA</small></span>
+        </a>
+        <nav class="main-nav" aria-label="Navegação principal">
+            <details class="nav-group">
+                <summary class="nav-trigger @(Model.Tela == "agenda" ? "is-active" : "")">AULAS <span class="chevron" aria-hidden="true"></span></summary>
+                <div class="nav-menu"><a class="@(Model.Tela == "agenda" ? "is-current" : "")" asp-page="/Index" asp-route-tela="agenda"><span></span>AGENDA</a></div>
+            </details>
+            <details class="nav-group">
+                <summary class="nav-trigger @(Model.Tela is "aluno" or "curso" ? "is-active" : "")">CADASTRO <span class="chevron" aria-hidden="true"></span></summary>
+                <div class="nav-menu">
+                    <a class="@(Model.Tela == "aluno" ? "is-current" : "")" asp-page="/Index" asp-route-tela="aluno"><span></span>ALUNO</a>
+                    <a class="@(Model.Tela == "curso" ? "is-current" : "")" asp-page="/Index" asp-route-tela="curso"><span></span>CURSO</a>
+                </div>
+            </details>
+        </nav>
+    </div>
+</header>
+
+<main class="main-content">
+    <section class="content-frame @(wide ? "content-frame-wide" : "")" aria-labelledby="page-title">
+        <span class="corner corner-tl" aria-hidden="true"></span><span class="corner corner-tr" aria-hidden="true"></span>
+        <span class="corner corner-bl" aria-hidden="true"></span><span class="corner corner-br" aria-hidden="true"></span>
+        <div class="panel">
+            <div class="panel-heading">
+                <div class="panel-status"><i class="status-green"></i><i class="status-blue"></i><i class="status-copper"></i><span></span><small>@(Model.Tela switch { "curso" => "REG_CURSO_v1.0", "agenda" => "AGENDA_v1.0", _ => "REG_ALUNO_v1.0" })</small></div>
+                <h1 id="page-title">@(Model.Tela switch { "curso" => "CADASTRO DE CURSO", "agenda" => "DIAS DE CURSO", _ => "CADASTRO DE ALUNO" })</h1>
+                <p>@(Model.Tela switch { "curso" => "Registre um novo curso no sistema da instituição.", "agenda" => "Cronograma de aulas — clique em um card para ver a lista de presença.", _ => "Preencha os dados para confirmar sua inscrição no curso." })</p>
+            </div>
+
+            @if (Model.CadastroConcluido)
+            {
+                <section class="success-panel" role="status">
+                    <svg class="success-mark" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22"/><path d="m14 24 7 7 13-14"/></svg>
+                    <h2>@(Model.Tela == "aluno" ? "INSCRIÇÃO CONFIRMADA" : "CURSO CADASTRADO")</h2>
+                    <p>@Model.MensagemSucesso</p>
+                    <a class="secondary-button" asp-page="/Index" asp-route-tela="@Model.Tela">NOVO CADASTRO</a>
+                </section>
+            }
+            else if (Model.Tela == "aluno")
+            {
+                <form method="post" asp-page-handler="CadastrarAluno" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+                    <div class="trace-label">IDENTIFICAÇÃO</div>
+                    <div class="form-grid student-grid">
+                        <div class="field"><label asp-for="Aluno.Nome">NOME <b>*</b></label><input asp-for="Aluno.Nome" class="input-field" placeholder="Ex: João" autocomplete="given-name"/><span asp-validation-for="Aluno.Nome" class="field-error"></span></div>
+                        <div class="field"><label asp-for="Aluno.Sobrenome">SOBRENOME <b>*</b></label><input asp-for="Aluno.Sobrenome" class="input-field" placeholder="Ex: Silva" autocomplete="family-name"/><span asp-validation-for="Aluno.Sobrenome" class="field-error"></span></div>
+                    </div>
+                    <div class="trace-label">CONTATO</div>
+                    <div class="field-stack">
+                        <div class="field"><label asp-for="Aluno.Email">E-MAIL INSTITUCIONAL <b>*</b></label><input asp-for="Aluno.Email" class="input-field" type="email" placeholder="usuario@instituicao.edu.br" autocomplete="email"/><span asp-validation-for="Aluno.Email" class="field-error"></span></div>
+                        <div class="field"><label asp-for="Aluno.Telefone">TELEFONE <small>(OPCIONAL)</small></label><input asp-for="Aluno.Telefone" class="input-field" type="tel" placeholder="(11) 99999-9999" autocomplete="tel"/></div>
+                    </div>
+                    <button class="submit-button" type="submit">CONFIRMAR INSCRIÇÃO</button>
+                    <p class="form-note">* Campos obrigatórios</p>
+                </form>
+            }
+            else if (Model.Tela == "curso")
+            {
+                <form method="post" asp-page-handler="CadastrarCurso" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+                    <div class="trace-label">IDENTIFICAÇÃO DO CURSO</div>
+                    <div class="form-grid course-name-grid">
+                        <div class="field"><label asp-for="Curso.Nome">NOME DO CURSO <b>*</b></label><input asp-for="Curso.Nome" class="input-field" placeholder="Ex: Arduino para Iniciantes"/><span asp-validation-for="Curso.Nome" class="field-error"></span></div>
+                        <div class="field"><label asp-for="Curso.Codigo">CÓDIGO <b>*</b></label><input asp-for="Curso.Codigo" class="input-field" placeholder="Ex: ARD-101"/><span asp-validation-for="Curso.Codigo" class="field-error"></span></div>
+                    </div>
+                    <div class="field course-description"><label asp-for="Curso.Descricao">DESCRIÇÃO <small>(OPCIONAL)</small></label><textarea asp-for="Curso.Descricao" class="input-field" placeholder="Descreva brevemente o conteúdo e objetivos do curso..." rows="3"></textarea></div>
+                    <div class="trace-label">CONFIGURAÇÃO</div>
+                    <div class="form-grid">
+                        <div class="field"><label asp-for="Curso.CargaHoraria">CARGA HORÁRIA (h) <b>*</b></label><input asp-for="Curso.CargaHoraria" class="input-field" type="number" min="1" placeholder="Ex: 40"/><span asp-validation-for="Curso.CargaHoraria" class="field-error"></span></div>
+                        <div class="field"><label asp-for="Curso.Vagas">VAGAS <b>*</b></label><input asp-for="Curso.Vagas" class="input-field" type="number" min="1" placeholder="Ex: 30"/><span asp-validation-for="Curso.Vagas" class="field-error"></span></div>
+                    </div>
+                    <div class="form-grid course-config-grid">
+                        <div class="field"><label asp-for="Curso.Modalidade">MODALIDADE <b>*</b></label><select asp-for="Curso.Modalidade" class="input-field"><option value="">Selecionar...</option><option value="presencial">Presencial</option><option value="online">Online</option><option value="hibrido">Híbrido</option></select><span asp-validation-for="Curso.Modalidade" class="field-error"></span></div>
+                        <div class="field"><label asp-for="Curso.DataInicio">DATA DE INÍCIO <b>*</b></label><input asp-for="Curso.DataInicio" class="input-field" type="date"/><span asp-validation-for="Curso.DataInicio" class="field-error"></span></div>
+                    </div>
+                    <div class="trace-label">RESPONSÁVEL</div>
+                    <div class="field course-instructor"><label asp-for="Curso.Instrutor">INSTRUTOR / RESPONSÁVEL <b>*</b></label><input asp-for="Curso.Instrutor" class="input-field" placeholder="Ex: Prof. Maria Santos"/><span asp-validation-for="Curso.Instrutor" class="field-error"></span></div>
+                    <button class="submit-button" type="submit">CADASTRAR CURSO</button>
+                    <p class="form-note">* Campos obrigatórios</p>
+                </form>
+            }
+            else
+            {
+                <div class="agenda-grid">
+                    @foreach (var aula in Model.Aulas)
+                    {
+                        var presentes = aula.Alunos.Count(aluno => aluno.Presenca == "presente");
+                        <article class="lesson-card">
+                            <span class="lesson-number">AULA @aula.Id.ToString("00")</span>
+                            <h2>@aula.Titulo</h2>
+                            <p class="lesson-summary">@aula.Resumo</p>
+                            <div class="card-divider"></div>
+                            <div class="lesson-card-bottom">
+                                <div class="lesson-meta"><span><i class="calendar-icon" aria-hidden="true"></i>@aula.Dia</span><span><i class="clock-icon" aria-hidden="true"></i>@aula.Horario</span></div>
+                                <button class="attendance-trigger" type="button" data-lesson="@aula.Id"><span aria-hidden="true">♙</span> @presentes/@aula.Alunos.Count ALUNOS</button>
+                            </div>
+                            <div class="attendance-source" hidden data-lesson="@aula.Id" data-title="@aula.Titulo" data-day="@aula.Dia" data-time="@aula.Horario" data-present="@presentes" data-absent="@aula.Alunos.Count(aluno => aluno.Presenca == "ausente")" data-excused="@aula.Alunos.Count(aluno => aluno.Presenca == "justificado")">
+                                @foreach (var aluno in aula.Alunos)
+                                {
+                                    <span data-registration="@aluno.Matricula" data-name="@aluno.Nome" data-status="@aluno.Presenca"></span>
+                                }
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+</main>
+
+<dialog class="attendance-dialog" aria-labelledby="attendance-title">
+    <div class="modal-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="modal-header">
+        <div><div class="modal-kicker"><i></i> LISTA_PRESENÇA</div><h2 id="attendance-title"></h2><p id="attendance-date"></p></div>
+        <button class="modal-close" type="button" aria-label="Fechar">×</button>
+    </div>
+    <div class="attendance-stats"><div><strong id="present-count"></strong><span>PRESENTES</span></div><div><strong id="absent-count"></strong><span>AUSENTES</span></div><div><strong id="excused-count"></strong><span>JUSTIFICADOS</span></div></div>
+    <div class="attendance-table-head"><span>MATRÍCULA</span><span>NOME</span><span>PRESENÇA</span></div>
+    <div class="attendance-rows"></div>
+    <p class="modal-footnote" id="attendance-total"></p>
+</dialog>
+
+<footer class="site-footer">
+    <div class="footer-inner"><p>© 2026 NavCode Instituto de Tecnologia</p><div><span><i>✉</i> contato.navcode01@gmail.com</span><span><i>☏</i> (11) 3000-0000</span></div></div>
+</footer>
+

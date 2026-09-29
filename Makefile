@@ -1,7 +1,4 @@
 #!/bin/make
 
-react:
+run:
 	npm run dev
-
-razor:
-	dotnet watch --project backend
