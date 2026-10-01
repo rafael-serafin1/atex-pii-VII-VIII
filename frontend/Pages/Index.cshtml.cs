@@ -15,6 +15,10 @@ public class IndexModel : PageModel
     [BindProperty]
     public CadastroCurso Curso { get; set; } = new();
 
+    [BindProperty]
+    [Required(ErrorMessage = "Informe o código da aula")]
+    public string CodigoPresenca { get; set; } = string.Empty;
+
     public bool CadastroConcluido { get; private set; }
     public string MensagemSucesso { get; private set; } = string.Empty;
     public IReadOnlyList<Aula> Aulas { get; } = CriarAulas();
@@ -46,9 +50,20 @@ public class IndexModel : PageModel
         return Page();
     }
 
+    public IActionResult OnPostMarcarPresenca()
+    {
+        Tela = "presenca";
+        if (!ModelState.IsValid)
+            return Page();
+
+        CadastroConcluido = true;
+        MensagemSucesso = "O código foi recebido e a presença foi registrada nesta demonstração.";
+        return Page();
+    }
+
     private void NormalizarTela()
     {
-        if (Tela is not ("aluno" or "curso" or "agenda"))
+        if (Tela is not ("aluno" or "curso" or "agenda" or "presenca"))
             Tela = "aluno";
     }
 

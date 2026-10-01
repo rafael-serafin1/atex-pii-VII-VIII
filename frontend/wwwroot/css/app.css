@@ -478,6 +478,112 @@ textarea.input-field {
     border-color:#39ff1473;
     color:var(--text)
 }
+.presence-checkin {
+    display:grid;
+    justify-items:center
+}
+.camera-panel {
+    display:grid;
+    justify-items:center;
+    width:min(100%,390px)
+}
+.camera-frame {
+    position:relative;
+    width:100%;
+    aspect-ratio:1;
+    overflow:hidden;
+    border:1px solid var(--trace);
+    background:#040904;
+    box-shadow:inset 0 0 36px #000
+}
+.camera-video {
+    width:100%;
+    height:100%;
+    object-fit:cover
+}
+.camera-placeholder {
+    position:absolute;
+    inset:0;
+    display:grid;
+    align-content:center;
+    justify-items:center;
+    gap:12px;
+    padding:24px;
+    color:var(--muted);
+    text-align:center
+}
+.camera-placeholder[hidden],.camera-video[hidden] {
+    display:none
+}
+.camera-placeholder strong {
+    color:var(--text);
+    font:600 .68rem var(--display);
+    letter-spacing:.08em
+}
+.camera-placeholder span:last-child {
+    font-size:.7rem;
+    line-height:1.5
+}
+.camera-glyph {
+    color:var(--blue);
+    font-size:2.7rem;
+    line-height:1;
+    text-shadow:0 0 14px #00d4ff75
+}
+.scan-corner {
+    position:absolute;
+    z-index:1;
+    width:23px;
+    height:23px;
+    border-color:var(--neon);
+    border-style:solid;
+    pointer-events:none
+}
+.scan-tl { top:12px; left:12px; border-width:2px 0 0 2px }
+.scan-tr { top:12px; right:12px; border-width:2px 2px 0 0 }
+.scan-bl { bottom:12px; left:12px; border-width:0 0 2px 2px }
+.scan-br { right:12px; bottom:12px; border-width:0 2px 2px 0 }
+.camera-button {
+    width:100%;
+    min-height:42px;
+    margin-top:12px;
+    border:1px solid #00d4ff66;
+    background:#00d4ff12;
+    color:var(--blue);
+    font:600 .68rem var(--display);
+    letter-spacing:.08em;
+    cursor:pointer
+}
+.camera-button:hover {
+    background:#00d4ff24
+}
+.camera-status {
+    min-height:1.5em;
+    margin:8px 0 0;
+    color:var(--muted);
+    font-size:.67rem;
+    line-height:1.5;
+    text-align:center
+}
+.presence-divider {
+    display:flex;
+    align-items:center;
+    gap:14px;
+    width:100%;
+    margin:24px 0 19px;
+    color:var(--muted);
+    font-size:.61rem;
+    letter-spacing:.12em
+}
+.presence-divider::before,.presence-divider::after {
+    flex:1;
+    height:1px;
+    background:var(--trace);
+    content:''
+}
+.presence-code-form {
+    width:min(100%,430px)
+}
 .agenda-grid {
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));
