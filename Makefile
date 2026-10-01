@@ -1,4 +1,4 @@
 #!/bin/make
 
 run:
-	npm run dev
+	dotnet watch --project frontend/frontend.csproj

@@ -647,7 +647,7 @@ textarea.input-field {
 .modal-corners i:nth-child(2) {
     top:-6px;
     right:-6px;
-    border-width:2px 2px 0
+    border-width:2px 2px 0 0
 }
 .modal-corners i:nth-child(3) {
     bottom:-6px;
@@ -657,7 +657,7 @@ textarea.input-field {
 .modal-corners i:nth-child(4) {
     right:-6px;
     bottom:-6px;
-    border-width:0 2px 2px
+    border-width:0 2px 2px 0
 }
 .modal-header {
     display:flex;
