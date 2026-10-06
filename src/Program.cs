@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using backend.config;
 using backend.repo;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddScoped<Connection>();
 builder.Services.AddScoped<AlunoRepository>();
 builder.Services.AddScoped<CursoRepository>();
 builder.Services.AddScoped<AulaRepository>();

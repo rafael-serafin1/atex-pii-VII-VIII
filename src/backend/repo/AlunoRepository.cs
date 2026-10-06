@@ -7,7 +7,12 @@ namespace backend.repo
 {
     public class AlunoRepository
     {
-        public Connection _connection = new Connection();
+        private readonly Connection _connection;
+
+        public AlunoRepository(Connection connection)
+        {
+            _connection = connection;
+        }
 
         public void CreateAluno(Alunos aluno)
         {
