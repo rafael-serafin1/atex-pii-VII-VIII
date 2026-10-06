@@ -147,13 +147,13 @@
                     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
                     <div class="trace-label">IDENTIFICAÇÃO</div>
                     <div class="form-grid student-grid">
-                        <div class="field"><label asp-for="Aluno.Nome">NOME <b>*</b></label><input asp-for="Aluno.Nome" class="input-field" placeholder="Ex: João" autocomplete="given-name"/><span asp-validation-for="Aluno.Nome" class="field-error"></span></div>
-                        <div class="field"><label asp-for="Aluno.Sobrenome">SOBRENOME <b>*</b></label><input asp-for="Aluno.Sobrenome" class="input-field" placeholder="Ex: Silva" autocomplete="family-name"/><span asp-validation-for="Aluno.Sobrenome" class="field-error"></span></div>
+                        <div class="field"><label asp-for="Aluno.Nome">NOME <b>*</b></label><input asp-for="Aluno.Nome" class="input-field" autocomplete="given-name"/><span asp-validation-for="Aluno.Nome" class="field-error"></span></div>
+                        <div class="field"><label asp-for="Aluno.Sobrenome">SOBRENOME <b>*</b></label><input asp-for="Aluno.Sobrenome" class="input-field" autocomplete="family-name"/><span asp-validation-for="Aluno.Sobrenome" class="field-error"></span></div>
                     </div>
                     <div class="trace-label">CONTATO</div>
                     <div class="field-stack">
-                        <div class="field"><label asp-for="Aluno.Email">E-MAIL INSTITUCIONAL <b>*</b></label><input asp-for="Aluno.Email" class="input-field" type="email" placeholder="usuario@instituicao.edu.br" autocomplete="email"/><span asp-validation-for="Aluno.Email" class="field-error"></span></div>
-                        <div class="field"><label asp-for="Aluno.Telefone">TELEFONE <small>(OPCIONAL)</small></label><input asp-for="Aluno.Telefone" class="input-field" type="tel" placeholder="(11) 99999-9999" autocomplete="tel"/></div>
+                        <div class="field"><label asp-for="Aluno.Email">E-MAIL<b>*</b></label><input asp-for="Aluno.Email" class="input-field" type="email" autocomplete="email"/><span asp-validation-for="Aluno.Email" class="field-error"></span></div>
+                        <div class="field"><label asp-for="Aluno.Telefone">TELEFONE <small>(OPCIONAL)</small></label><input asp-for="Aluno.Telefone" class="input-field" type="tel" autocomplete="tel"/></div>
                     </div>
                     <button class="submit-button" type="submit">CONFIRMAR INSCRIÇÃO</button>
                     <p class="form-note">* Campos obrigatórios</p>
@@ -238,5 +238,5 @@
 </main>
 
 <footer class="site-footer">
-    <div class="footer-inner"><p>© 2026 NavCode Instituto de Tecnologia</p><div><span><i>✉</i> contato.navcode01@gmail.com</span><span><i>☏</i> (11) 3000-0000</span></div></div>
+    <div class="footer-inner"><p>© 2026 NavCode Instituto de Tecnologia</p></div>
 </footer>
