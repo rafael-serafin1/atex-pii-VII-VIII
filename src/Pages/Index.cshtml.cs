@@ -74,6 +74,7 @@ public class IndexModel : PageModel
     public IActionResult OnPostCadastrarAluno()
     {
         Tela = "aluno";
+        
         if (!ModelState.IsValid)
             return Page();
 
