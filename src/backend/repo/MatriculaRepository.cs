@@ -7,7 +7,12 @@ namespace backend.repo
 {
     public class MatriculaRepository
     {
-        public Connection _connection = new Connection();
+        private readonly Connection _connection;
+
+        public MatriculaRepository(Connection connection)
+        {
+            _connection = connection;
+        }
 
         public void CreateMatricula(Matriculas matricula)
         {

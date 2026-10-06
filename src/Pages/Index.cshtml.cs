@@ -33,7 +33,6 @@ public class IndexModel : PageModel
     public CadastroCurso Curso { get; set; } = new();
 
     [BindProperty]
-    [Required(ErrorMessage = "Informe o código da aula")]
     public string CodigoPresenca { get; set; } = string.Empty;
 
     public bool CadastroConcluido { get; private set; }
@@ -74,8 +73,9 @@ public class IndexModel : PageModel
     public IActionResult OnPostCadastrarAluno()
     {
         Tela = "aluno";
-        
-        if (!ModelState.IsValid)
+        ValidateOnly(Aluno, nameof(Aluno));
+
+        if (!ModelStateValidFor("aluno"))
             return Page();
 
         var aluno = new Alunos(
@@ -109,7 +109,9 @@ public class IndexModel : PageModel
             return Forbid();
 
         Tela = "curso";
-        if (!ModelState.IsValid)
+        ValidateOnly(Curso, nameof(Curso));
+
+        if (!ModelStateValidFor("curso"))
             return Page();
 
         var curso = new Cursos(
@@ -138,7 +140,12 @@ public class IndexModel : PageModel
     public IActionResult OnPostMarcarPresenca()
     {
         Tela = "presenca";
-        if (!ModelState.IsValid)
+        ModelState.Clear();
+
+        if (string.IsNullOrWhiteSpace(CodigoPresenca))
+            ModelState.AddModelError(nameof(CodigoPresenca), "Informe o código da aula");
+
+        if (!ModelStateValidFor("presença"))
             return Page();
 
         CadastroConcluido = true;
@@ -150,6 +157,26 @@ public class IndexModel : PageModel
     {
         if (Tela is not ("aluno" or "curso" or "agenda" or "presenca"))
             Tela = "aluno";
+    }
+
+    private void ValidateOnly(object model, string prefix)
+    {
+        ModelState.Clear();
+        TryValidateModel(model, prefix);
+    }
+
+    private bool ModelStateValidFor(string formName)
+    {
+        if (ModelState.IsValid)
+            return true;
+
+        var errors = ModelState
+            .SelectMany(entry => entry.Value?.Errors
+                .Select(error => $"{entry.Key}: {error.ErrorMessage}")
+                ?? Enumerable.Empty<string>());
+        _logger.LogWarning("Validação do formulário {FormName} falhou: {ValidationErrors}", formName, string.Join("; ", errors));
+        ModelState.AddModelError(string.Empty, "Confira os campos informados e tente novamente.");
+        return false;
     }
 
     public sealed class CadastroAluno

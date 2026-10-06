@@ -4,15 +4,18 @@ namespace backend.config;
 
 public class Connection
 {
-    private string connection_string = "Server=.\\SQLEXPRESS;Database=atexpiiVIVII;User Id=sa;Password=123;TrustServerCertificate=True;";
-    
+    private readonly string _connectionString;
+
+    public Connection(IConfiguration configuration)
+    {
+        _connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("A connection string 'DefaultConnection' não foi configurada.");
+    }
+
     public SqlConnection GetConnection()
     {
-        var conn =  new SqlConnection(connection_string);
-        conn.Open();
-
-        Console.WriteLine("Connection opened.");
-
-        return conn;
+        var connection = new SqlConnection(_connectionString);
+        connection.Open();
+        return connection;
     }
 }

@@ -7,7 +7,12 @@ namespace backend.repo
 {
     public class PresencaRepository
     {
-        public Connection _connection = new Connection();
+        private readonly Connection _connection;
+
+        public PresencaRepository(Connection connection)
+        {
+            _connection = connection;
+        }
 
         public void CreatePresenca(Presencas presenca)
         {
