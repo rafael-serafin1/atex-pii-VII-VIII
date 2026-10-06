@@ -76,8 +76,8 @@
             @if (Model.CadastroConcluido)
             {
                 <section class="success-panel" role="status">
-                    <img src="~check_icon.svg" alt="Sucess"/>
-                    <h2>@(Model.Tela switch { "aluno" => "INSCRIÇÃO CONFIRMADA", "presenca" => "PRESENÇA REGISTRADA", _ => "CURSO CADASTRADO" })</h2>
+                    <img src="~/check_icon.svg" alt="Sucess"/>
+                    <h2>@(Model.Tela switch { "aluno" => "INSCRIÇÃO CONFIRMADA", "presenca" => "PRESENÇA REGISTRADA", "curso" => "CURSO CADASTRADO", "aula" => "AULA CADASTRADO", _ => "CADASTRO CONCLUÍDO" })</h2>
                     <p>@Model.MensagemSucesso</p>
                     <a class="secondary-button" asp-page="/Index" asp-route-tela="@Model.Tela">@(Model.Tela == "presenca" ? "VOLTAR À PRESENÇA" : "NOVO CADASTRO")</a>
                 </section>
@@ -160,7 +160,7 @@
                     <div class="trace-label">CONFIGURAÇÃO</div>
                     <div class="form-grid course-config-grid">
                         <div class="field"><label asp-for="Curso.DataApresentacao">DATA DE APRESENTAÇÃO <b>*</b></label><input asp-for="Curso.DataApresentacao" class="input-field" type="date"/><span asp-validation-for="Curso.DataApresentacao" class="field-error"></span></div>
-                        <div class="field"><label asp-for="Curso.TempoApresentacao">DURAÇÃO (h) <b>*</b></label><input asp-for="Curso.TempoApresentacao" class="input-field" type="number" min="1" placeholder="Ex: 40"/><span asp-validation-for="Curso.TempoApresentacao" class="field-error"></span></div>
+                        <div class="field"><label asp-for="Curso.TempoApresentacao">DURAÇÃO (min) <b>*</b></label><input asp-for="Curso.TempoApresentacao" class="input-field" type="number" min="1" placeholder="Ex: 40"/><span asp-validation-for="Curso.TempoApresentacao" class="field-error"></span></div>
                     </div>
                     <button class="submit-button" type="submit">CADASTRAR CURSO</button>
                     <p class="form-note">* Campos obrigatórios</p>
