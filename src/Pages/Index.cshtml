@@ -1,10 +1,11 @@
 ﻿@page
 @model IndexModel
 @{
-    var wide = Model.Tela is "curso" or "agenda" or "presenca";
+    var wide = Model.Tela is "curso" or "aula" or "agenda" or "presenca";
     ViewData["Title"] = Model.Tela switch
     {
         "curso" => "Cadastro de Curso",
+        "aula" => "Cadastro de Aula",
         "agenda" => "Dias de Curso",
         "presenca" => "Marcar Presença",
         _ => "Cadastro de Aluno"
@@ -35,47 +36,18 @@
                 </div>
             </details>
             <details class="nav-group">
-                <summary class="nav-trigger @(Model.Tela is "aluno" or "curso" ? "is-active" : "")">CADASTRO 
+                <summary class="nav-trigger @(Model.Tela is "aluno" or "curso" or "aula" ? "is-active" : "")">CADASTRO 
                     <span class="chevron" aria-hidden="true"></span>
                 </summary>
                 <div class="nav-menu">
                     <a class="@(Model.Tela == "aluno" ? "is-current" : "")" asp-page="/Index" asp-route-tela="aluno"><span></span>ALUNO</a>
-                    @if (Model.IsAdmin)
-                    {
-                        <a class="@(Model.Tela == "curso" ? "is-current" : "")" asp-page="/Index" asp-route-tela="curso"><span></span>CURSO</a>
-                    }
+                    <a class="@(Model.Tela == "curso" ? "is-current" : "")" asp-page="/Index" asp-route-tela="curso"><span></span>CURSO</a>
+                    <a class="@(Model.Tela == "aula" ? "is-current" : "")" asp-page="/Index" asp-route-tela="aula"><span></span>AULA</a>
                 </div>
             </details>
-            @if (Model.IsAdmin)
-            {
-                <button class="nav-trigger admin-auth-trigger" type="button" data-admin-logout>SAIR ADMIN</button>
-            }
-            else
-            {
-                <button class="nav-trigger admin-auth-trigger" type="button" data-admin-login>ACESSO ADMIN</button>
-            }
         </nav>
     </div>
 </header>
-
-@if (!Model.IsAdmin)
-{
-    <dialog class="admin-access-dialog" data-admin-dialog aria-labelledby="admin-access-title">
-        <form method="post" action="/admin/session" data-admin-login-form>
-            <h2 id="admin-access-title">ACESSO ADMINISTRATIVO</h2>
-            <p>Informe o token de administrador. Ele ficará salvo neste navegador.</p>
-            <label class="field">
-                <span>TOKEN</span>
-                <input class="input-field" type="password" name="token" autocomplete="current-password" required />
-            </label>
-            <p class="field-error" data-admin-error role="alert"></p>
-            <div class="admin-dialog-actions">
-                <button class="secondary-button" type="button" data-admin-cancel>CANCELAR</button>
-                <button class="submit-button" type="submit">ENTRAR</button>
-            </div>
-        </form>
-    </dialog>
-}
 
 <main class="main-content">
     <section class="content-frame @(wide ? "content-frame-wide" : "")" aria-labelledby="page-title">
@@ -89,15 +61,15 @@
                     <i class="status-copper"></i>
                     <span></span>
                     <small>
-                        @(Model.Tela switch { "curso" => "REG_CURSO_v1.0", "agenda" => "AGENDA_v1.0", "presenca" => "PRESENCA_v1.0", _ => "REG_ALUNO_v1.0" })
+                        @(Model.Tela switch { "curso" => "REG_CURSO_v1.0", "aula" => "REG_AULA_v1.0", "agenda" => "AGENDA_v1.0", "presenca" => "PRESENCA_v1.0", _ => "REG_ALUNO_v1.0" })
                     </small>
                 </div>
 
                 <h1 id="page-title">
-                    @(Model.Tela switch { "curso" => "CADASTRO DE CURSO", "agenda" => "DIAS DE CURSO", "presenca" => "MARCAR PRESENÇA", _ => "CADASTRO DE ALUNO" })
+                    @(Model.Tela switch { "curso" => "CADASTRO DE CURSO", "aula" => "CADASTRO DE AULA", "agenda" => "DIAS DE CURSO", "presenca" => "MARCAR PRESENÇA", _ => "CADASTRO DE ALUNO" })
                 </h1>
                 <p>
-                    @(Model.Tela switch { "curso" => "Registre um novo curso no sistema da instituição.", "agenda" => "Cursos cadastrados e suas aulas programadas.", "presenca" => "Selecione a aula e marque manualmente a situação de cada aluno cadastrado.", _ => "Preencha os dados para confirmar sua inscrição no curso." })
+                    @(Model.Tela switch { "curso" => "Registre um novo curso no sistema da instituição.", "aula" => "Programe uma nova aula para um curso cadastrado.", "agenda" => "Cursos cadastrados e suas aulas programadas.", "presenca" => "Selecione a aula e marque manualmente a situação de cada aluno cadastrado.", _ => "Preencha os dados para confirmar sua inscrição no curso." })
                 </p>
             </div>
 
@@ -134,17 +106,21 @@
                         <div class="manual-presence-list">
                             <div class="manual-presence-header">
                                 <span>ALUNO</span>
+                                <span>OBSERVAÇÃO DA AUSÊNCIA</span>
                                 <span>PRESENTE</span>
                             </div>
                             @foreach (var aluno in Model.AlunosCadastrados)
                             {
-                                <label class="manual-presence-row">
+                                <div class="manual-presence-row">
                                     <span>
                                         <strong>@aluno.Nome @aluno.Sobrenome</strong>
                                         <small>@aluno.Email</small>
                                     </span>
-                                    <input type="checkbox" name="AlunosPresentes" value="@aluno.Id" />
-                                </label>
+                                    <textarea class="input-field absence-observation" name="Observacoes[@aluno.Id]" maxlength="150" placeholder="Ex: falta justificada" data-absence-observation="@aluno.Id"></textarea>
+                                    <label class="presence-checkbox">
+                                        <input type="checkbox" name="AlunosPresentes" value="@aluno.Id" aria-label="Marcar aluno como presente" data-presence-checkbox="@aluno.Id" />
+                                    </label>
+                                </div>
                             }
                         </div>
                         <button class="submit-button" type="submit">SALVAR CHAMADA</button>
@@ -188,6 +164,43 @@
                     </div>
                     <button class="submit-button" type="submit">CADASTRAR CURSO</button>
                     <p class="form-note">* Campos obrigatórios</p>
+                </form>
+            }
+            else if (Model.Tela == "aula")
+            {
+                <form method="post" asp-page-handler="CadastrarAula" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+                    <div class="trace-label">VÍNCULO DA AULA</div>
+                    <div class="field">
+                        <label asp-for="Aula.IdCurso">CURSO <b>*</b></label>
+                        <select asp-for="Aula.IdCurso" class="input-field">
+                            <option value="">Selecione o curso</option>
+                            @foreach (var curso in Model.CursosCadastrados)
+                            {
+                                <option value="@curso.Id">@curso.Nome</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Aula.IdCurso" class="field-error"></span>
+                    </div>
+                    <div class="trace-label">DADOS DA AULA</div>
+                    <div class="field">
+                        <label asp-for="Aula.Titulo">TÍTULO <b>*</b></label>
+                        <input asp-for="Aula.Titulo" class="input-field" placeholder="Ex: Introdução ao Arduino" />
+                        <span asp-validation-for="Aula.Titulo" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Aula.DataAula">DATA E HORA <b>*</b></label>
+                        <input asp-for="Aula.DataAula" class="input-field" type="datetime-local" />
+                        <span asp-validation-for="Aula.DataAula" class="field-error"></span>
+                    </div>
+                    @if (Model.CursosCadastrados.Count == 0)
+                    {
+                        <p class="agenda-empty">Cadastre um curso antes de cadastrar uma aula.</p>
+                    }
+                    else
+                    {
+                        <button class="submit-button" type="submit">CADASTRAR AULA</button>
+                    }
                 </form>
             }
             else if (Model.Tela == "agenda")

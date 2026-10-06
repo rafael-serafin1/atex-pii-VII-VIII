@@ -35,24 +35,27 @@ public class IndexModel : PageModel
     public CadastroCurso Curso { get; set; } = new();
 
     [BindProperty]
+    public CadastroAula Aula { get; set; } = new();
+
+    [BindProperty]
     public int? AulaSelecionada { get; set; }
 
     [BindProperty]
     public List<int> AlunosPresentes { get; set; } = [];
 
+    [BindProperty]
+    public Dictionary<int, string> Observacoes { get; set; } = [];
+
     public bool CadastroConcluido { get; private set; }
-    public bool IsAdmin => User.IsInRole("admin");
     public string MensagemSucesso { get; private set; } = string.Empty;
     public IReadOnlyList<CursoComAulas> AgendaCursos { get; private set; } = [];
     public IReadOnlyList<Alunos> AlunosCadastrados { get; private set; } = [];
     public IReadOnlyList<Aulas> AulasCadastradas { get; private set; } = [];
+    public IReadOnlyList<Cursos> CursosCadastrados { get; private set; } = [];
 
     public IActionResult OnGet()
     {
         NormalizarTela();
-
-        if (Tela == "curso" && !IsAdmin)
-            return RedirectToPage("/Index", new { tela = "aluno" });
 
         if (Tela == "agenda")
         {
@@ -76,6 +79,9 @@ public class IndexModel : PageModel
 
         if (Tela == "presenca")
             CarregarDadosPresenca();
+
+        if (Tela == "aula")
+            CarregarCursos();
 
         return Page();
     }
@@ -115,9 +121,6 @@ public class IndexModel : PageModel
 
     public IActionResult OnPostCadastrarCurso()
     {
-        if (!IsAdmin)
-            return Forbid();
-
         Tela = "curso";
         ValidateOnly(Curso, nameof(Curso));
 
@@ -144,6 +147,46 @@ public class IndexModel : PageModel
 
         CadastroConcluido = true;
         MensagemSucesso = $"O curso \"{Curso.Nome}\" foi registrado com sucesso no sistema.";
+        return Page();
+    }
+
+    public IActionResult OnPostCadastrarAula()
+    {
+        Tela = "aula";
+        ValidateOnly(Aula, nameof(Aula));
+
+        if (!ModelStateValidFor("aula"))
+        {
+            CarregarCursos();
+            return Page();
+        }
+
+        try
+        {
+            var cursos = _cursoRepository.GetAllCursos();
+            if (!cursos.Any(curso => curso.Id == Aula.IdCurso))
+            {
+                ModelState.AddModelError(nameof(Aula.IdCurso), "Selecione um curso válido.");
+                CarregarCursos();
+                return Page();
+            }
+
+            _aulaRepository.CreateAula(new Aulas(
+                0,
+                Aula.IdCurso!.Value,
+                Aula.Titulo.Trim(),
+                Aula.DataAula!.Value));
+        }
+        catch (SqlException exception)
+        {
+            _logger.LogError(exception, "Falha ao cadastrar aula no banco de dados");
+            ModelState.AddModelError(string.Empty, "Não foi possível cadastrar a aula. Tente novamente.");
+            CarregarCursos();
+            return Page();
+        }
+
+        CadastroConcluido = true;
+        MensagemSucesso = $"A aula \"{Aula.Titulo}\" foi cadastrada com sucesso.";
         return Page();
     }
 
@@ -181,12 +224,23 @@ public class IndexModel : PageModel
             }
 
             var presentes = AlunosPresentes.ToHashSet();
+            if (Observacoes.Any(item => !alunoIds.Contains(item.Key) || item.Value.Length > 150))
+            {
+                ModelState.AddModelError(string.Empty, "Cada observação deve pertencer a um aluno e ter no máximo 150 caracteres.");
+                CarregarDadosPresenca();
+                return Page();
+            }
+
             var registros = alunos.Select(aluno => new Presencas(
                 0,
                 aluno.Id,
                 AulaSelecionada.Value,
                 presentes.Contains(aluno.Id),
-                string.Empty,
+                presentes.Contains(aluno.Id)
+                    ? string.Empty
+                    : (Observacoes.TryGetValue(aluno.Id, out var observacao)
+                        ? observacao.Trim()
+                        : string.Empty),
                 DateTime.Now));
 
             _presencaRepository.SavePresencas(AulaSelecionada.Value, registros);
@@ -206,7 +260,7 @@ public class IndexModel : PageModel
 
     private void NormalizarTela()
     {
-        if (Tela is not ("aluno" or "curso" or "agenda" or "presenca"))
+        if (Tela is not ("aluno" or "curso" or "aula" or "agenda" or "presenca"))
             Tela = "aluno";
     }
 
@@ -219,10 +273,26 @@ public class IndexModel : PageModel
                 .OrderByDescending(aula => aula.DataAula)
                 .ToList();
         }
+
         catch (SqlException exception)
         {
             _logger.LogError(exception, "Falha ao carregar alunos e aulas para registro de presença");
             ModelState.AddModelError(string.Empty, "Não foi possível carregar os dados da presença. Tente novamente mais tarde.");
+        }
+    }
+
+    private void CarregarCursos()
+    {
+        try
+        {
+            CursosCadastrados = _cursoRepository.GetAllCursos()
+                .OrderBy(curso => curso.Nome)
+                .ToList();
+        }
+        catch (SqlException exception)
+        {
+            _logger.LogError(exception, "Falha ao carregar cursos para cadastro de aula");
+            ModelState.AddModelError(string.Empty, "Não foi possível carregar os cursos. Tente novamente mais tarde.");
         }
     }
 
@@ -269,6 +339,19 @@ public class IndexModel : PageModel
         [Required(ErrorMessage = "Campo obrigatório")]
         [DataType(DataType.Date)]
         public DateTime? DataApresentacao { get; set; }
+    }
+
+    public sealed class CadastroAula
+    {
+        [Required(ErrorMessage = "Selecione um curso")]
+        public int? IdCurso { get; set; }
+
+        [Required(ErrorMessage = "Campo obrigatório")]
+        public string Titulo { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Campo obrigatório")]
+        [DataType(DataType.DateTime)]
+        public DateTime? DataAula { get; set; }
     }
 
     public sealed record CursoComAulas(Cursos Curso, IReadOnlyList<Aulas> Aulas);

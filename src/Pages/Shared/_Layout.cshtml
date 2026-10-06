@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
 </head>
-<body data-admin-session="@(Context.User.IsInRole("admin").ToString().ToLowerInvariant())">
+<body>
     @RenderBody()
     <script src="~/js/site.js" asp-append-version="true"></script>
 
