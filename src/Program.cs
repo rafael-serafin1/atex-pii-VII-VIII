@@ -14,6 +14,7 @@ builder.Services.AddScoped<Connection>();
 builder.Services.AddScoped<AlunoRepository>();
 builder.Services.AddScoped<CursoRepository>();
 builder.Services.AddScoped<AulaRepository>();
+builder.Services.AddScoped<PresencaRepository>();
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

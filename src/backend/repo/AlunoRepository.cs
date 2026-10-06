@@ -37,5 +37,27 @@ namespace backend.repo
             cmd.Parameters.AddWithValue("@Id", id);
             cmd.ExecuteNonQuery();
         }
+
+        public List<Alunos> GetAllAlunos()
+        {
+            var alunos = new List<Alunos>();
+            using var conn = _connection.GetConnection();
+            const string query = "SELECT id_aluno, nome, sobrenome, telefone, email, data_cadastro FROM alunos ORDER BY nome, sobrenome";
+
+            using var cmd = new SqlCommand(query, conn);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                alunos.Add(new Alunos(
+                    reader.GetInt32(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    reader.IsDBNull(3) ? null : reader.GetString(3),
+                    reader.GetString(4),
+                    reader.GetDateTime(5)));
+            }
+
+            return alunos;
+        }
     }
 }

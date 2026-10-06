@@ -97,7 +97,7 @@
                     @(Model.Tela switch { "curso" => "CADASTRO DE CURSO", "agenda" => "DIAS DE CURSO", "presenca" => "MARCAR PRESENÇA", _ => "CADASTRO DE ALUNO" })
                 </h1>
                 <p>
-                    @(Model.Tela switch { "curso" => "Registre um novo curso no sistema da instituição.", "agenda" => "Cursos cadastrados e suas aulas programadas.", "presenca" => "Escaneie o QR Code da aula ou informe o código exibido pelo administrador.", _ => "Preencha os dados para confirmar sua inscrição no curso." })
+                    @(Model.Tela switch { "curso" => "Registre um novo curso no sistema da instituição.", "agenda" => "Cursos cadastrados e suas aulas programadas.", "presenca" => "Selecione a aula e marque manualmente a situação de cada aluno cadastrado.", _ => "Preencha os dados para confirmar sua inscrição no curso." })
                 </p>
             </div>
 
@@ -112,34 +112,44 @@
             }
             else if (Model.Tela == "presenca")
             {
-                <div class="presence-checkin">
-                    <div class="camera-panel">
-                        <div class="camera-frame" data-camera-frame>
-                            <video class="camera-video" data-camera-video autoplay muted playsinline hidden></video>
-                            <div class="camera-placeholder" data-camera-placeholder>
-                                <span class="camera-glyph" aria-hidden="true">⌗</span>
-                                <strong>CÂMERA DESATIVADA</strong>
-                                <span>A imagem aparecerá aqui após a autorização.</span>
-                            </div>
-                            <span class="scan-corner scan-tl" aria-hidden="true"></span><span class="scan-corner scan-tr" aria-hidden="true"></span>
-                            <span class="scan-corner scan-bl" aria-hidden="true"></span><span class="scan-corner scan-br" aria-hidden="true"></span>
-                        </div>
-                        <button class="camera-button" type="button" data-camera-start>ATIVAR CÂMERA</button>
-                        <p class="camera-status" data-camera-status role="status" aria-live="polite">A câmera só será acessada após sua autorização.</p>
+                <form method="post" asp-page-handler="MarcarPresenca" class="manual-presence-form">
+                    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+                    <div class="field">
+                        <label asp-for="AulaSelecionada">AULA <b>*</b></label>
+                        <select asp-for="AulaSelecionada" class="input-field">
+                            <option value="">Selecione a aula</option>
+                            @foreach (var aula in Model.AulasCadastradas)
+                            {
+                                <option value="@aula.Id">@aula.Titulo - @aula.DataAula.ToString("dd/MM/yyyy HH:mm")</option>
+                            }
+                        </select>
+                        <span asp-validation-for="AulaSelecionada" class="field-error"></span>
                     </div>
-
-                    <div class="presence-divider"><span>OU INFORME O CÓDIGO</span></div>
-
-                    <form method="post" asp-page-handler="MarcarPresenca" class="presence-code-form">
-                        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
-                        <div class="field">
-                            <label asp-for="CodigoPresenca">CÓDIGO DA AULA <b>*</b></label>
-                            <input asp-for="CodigoPresenca" class="input-field" placeholder="Ex: ARD-4821" autocomplete="one-time-code" data-attendance-code required />
-                            <span asp-validation-for="CodigoPresenca" class="field-error"></span>
+                    @if (Model.AlunosCadastrados.Count == 0)
+                    {
+                        <p class="agenda-empty">Nenhum aluno cadastrado.</p>
+                    }
+                    else
+                    {
+                        <div class="manual-presence-list">
+                            <div class="manual-presence-header">
+                                <span>ALUNO</span>
+                                <span>PRESENTE</span>
+                            </div>
+                            @foreach (var aluno in Model.AlunosCadastrados)
+                            {
+                                <label class="manual-presence-row">
+                                    <span>
+                                        <strong>@aluno.Nome @aluno.Sobrenome</strong>
+                                        <small>@aluno.Email</small>
+                                    </span>
+                                    <input type="checkbox" name="AlunosPresentes" value="@aluno.Id" />
+                                </label>
+                            }
                         </div>
-                        <button class="submit-button" type="submit">MARCAR PRESENÇA</button>
-                    </form>
-                </div>
+                        <button class="submit-button" type="submit">SALVAR CHAMADA</button>
+                    }
+                </form>
             }
             else if (Model.Tela == "aluno")
             {

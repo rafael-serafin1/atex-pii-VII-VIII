@@ -28,6 +28,53 @@ namespace backend.repo
             cmd.ExecuteNonQuery();
         }
 
+        public void SavePresencas(int idAula, IEnumerable<Presencas> presencas)
+        {
+            using var conn = _connection.GetConnection();
+            using var transaction = conn.BeginTransaction();
+
+            try
+            {
+                const string updateQuery = """
+                    UPDATE presencas
+                    SET presente = @Presente, observacoes = @Observacoes, data_registro = @DataRegistro
+                    WHERE id_aluno = @IdAluno AND id_aula = @IdAula
+                    """;
+                const string insertQuery = """
+                    INSERT INTO presencas(id_aluno, id_aula, presente, observacoes, data_registro)
+                    VALUES (@IdAluno, @IdAula, @Presente, @Observacoes, @DataRegistro)
+                    """;
+
+                foreach (var presenca in presencas)
+                {
+                    using var update = new SqlCommand(updateQuery, conn, transaction);
+                    AddParameters(update, presenca);
+                    if (update.ExecuteNonQuery() != 0)
+                        continue;
+
+                    using var insert = new SqlCommand(insertQuery, conn, transaction);
+                    AddParameters(insert, presenca);
+                    insert.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
+
+        private static void AddParameters(SqlCommand command, Presencas presenca)
+        {
+            command.Parameters.AddWithValue("@IdAluno", presenca.IdAluno);
+            command.Parameters.AddWithValue("@IdAula", presenca.IdAula);
+            command.Parameters.AddWithValue("@Presente", presenca.Presente);
+            command.Parameters.AddWithValue("@Observacoes", presenca.Observacoes);
+            command.Parameters.AddWithValue("@DataRegistro", presenca.DataRegistro);
+        }
+
         public void DeletePresenca(int id)
         {
             using var conn = _connection.GetConnection();

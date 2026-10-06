@@ -12,14 +12,16 @@ public class IndexModel : PageModel
     private readonly AlunoRepository _alunoRepository;
     private readonly CursoRepository _cursoRepository;
     private readonly AulaRepository _aulaRepository;
+    private readonly PresencaRepository _presencaRepository;
 
     private readonly ILogger<IndexModel> _logger;
 
-    public IndexModel(AlunoRepository alunoRepository, CursoRepository cursoRepository, AulaRepository aulaRepository, ILogger<IndexModel> logger)
+    public IndexModel(AlunoRepository alunoRepository, CursoRepository cursoRepository, AulaRepository aulaRepository, PresencaRepository presencaRepository, ILogger<IndexModel> logger)
     {
         _alunoRepository = alunoRepository;
         _cursoRepository = cursoRepository;
         _aulaRepository = aulaRepository;
+        _presencaRepository = presencaRepository;
         _logger = logger;
     }
 
@@ -33,12 +35,17 @@ public class IndexModel : PageModel
     public CadastroCurso Curso { get; set; } = new();
 
     [BindProperty]
-    public string CodigoPresenca { get; set; } = string.Empty;
+    public int? AulaSelecionada { get; set; }
+
+    [BindProperty]
+    public List<int> AlunosPresentes { get; set; } = [];
 
     public bool CadastroConcluido { get; private set; }
     public bool IsAdmin => User.IsInRole("admin");
     public string MensagemSucesso { get; private set; } = string.Empty;
     public IReadOnlyList<CursoComAulas> AgendaCursos { get; private set; } = [];
+    public IReadOnlyList<Alunos> AlunosCadastrados { get; private set; } = [];
+    public IReadOnlyList<Aulas> AulasCadastradas { get; private set; } = [];
 
     public IActionResult OnGet()
     {
@@ -66,6 +73,9 @@ public class IndexModel : PageModel
                 ModelState.AddModelError(string.Empty, "Não foi possível carregar a agenda. Tente novamente mais tarde.");
             }
         }
+
+        if (Tela == "presenca")
+            CarregarDadosPresenca();
 
         return Page();
     }
@@ -142,14 +152,55 @@ public class IndexModel : PageModel
         Tela = "presenca";
         ModelState.Clear();
 
-        if (string.IsNullOrWhiteSpace(CodigoPresenca))
-            ModelState.AddModelError(nameof(CodigoPresenca), "Informe o código da aula");
+        if (!AulaSelecionada.HasValue)
+            ModelState.AddModelError(nameof(AulaSelecionada), "Selecione a aula");
 
         if (!ModelStateValidFor("presença"))
+        {
+            CarregarDadosPresenca();
             return Page();
+        }
+
+        try
+        {
+            var alunos = _alunoRepository.GetAllAlunos();
+            var aulas = _aulaRepository.GetAllAulas();
+            if (!aulas.Any(aula => aula.Id == AulaSelecionada.Value))
+            {
+                ModelState.AddModelError(nameof(AulaSelecionada), "A aula selecionada não existe.");
+                CarregarDadosPresenca();
+                return Page();
+            }
+
+            var alunoIds = alunos.Select(aluno => aluno.Id).ToHashSet();
+            if (AlunosPresentes.Any(id => !alunoIds.Contains(id)))
+            {
+                ModelState.AddModelError(string.Empty, "A lista de alunos informada é inválida.");
+                CarregarDadosPresenca();
+                return Page();
+            }
+
+            var presentes = AlunosPresentes.ToHashSet();
+            var registros = alunos.Select(aluno => new Presencas(
+                0,
+                aluno.Id,
+                AulaSelecionada.Value,
+                presentes.Contains(aluno.Id),
+                string.Empty,
+                DateTime.Now));
+
+            _presencaRepository.SavePresencas(AulaSelecionada.Value, registros);
+        }
+        catch (SqlException exception)
+        {
+            _logger.LogError(exception, "Falha ao registrar presenças no banco de dados");
+            ModelState.AddModelError(string.Empty, "Não foi possível registrar a presença. Tente novamente.");
+            CarregarDadosPresenca();
+            return Page();
+        }
 
         CadastroConcluido = true;
-        MensagemSucesso = "O código foi recebido e a presença foi registrada nesta demonstração.";
+        MensagemSucesso = "A chamada foi registrada com sucesso.";
         return Page();
     }
 
@@ -157,6 +208,22 @@ public class IndexModel : PageModel
     {
         if (Tela is not ("aluno" or "curso" or "agenda" or "presenca"))
             Tela = "aluno";
+    }
+
+    private void CarregarDadosPresenca()
+    {
+        try
+        {
+            AlunosCadastrados = _alunoRepository.GetAllAlunos();
+            AulasCadastradas = _aulaRepository.GetAllAulas()
+                .OrderByDescending(aula => aula.DataAula)
+                .ToList();
+        }
+        catch (SqlException exception)
+        {
+            _logger.LogError(exception, "Falha ao carregar alunos e aulas para registro de presença");
+            ModelState.AddModelError(string.Empty, "Não foi possível carregar os dados da presença. Tente novamente mais tarde.");
+        }
     }
 
     private void ValidateOnly(object model, string prefix)

@@ -639,6 +639,61 @@ textarea.input-field {
 .presence-code-form {
     width:min(100%,430px)
 }
+.manual-presence-form {
+    display:grid;
+    gap:18px
+}
+.manual-presence-form>.field {
+    width:min(100%,560px)
+}
+.manual-presence-list {
+    overflow:hidden;
+    border:1px solid var(--trace);
+    background:#0b1a0ed1
+}
+.manual-presence-header,.manual-presence-row {
+    display:grid;
+    grid-template-columns:1fr 110px;
+    align-items:center;
+    gap:14px;
+    padding:12px 18px
+}
+.manual-presence-header {
+    border-bottom:1px solid var(--trace);
+    background:#1a4a2226;
+    color:var(--muted);
+    font-size:.58rem;
+    letter-spacing:.1em
+}
+.manual-presence-row {
+    min-height:57px;
+    border-bottom:1px solid #1a4a2259;
+    cursor:pointer
+}
+.manual-presence-row:last-child {
+    border-bottom:0
+}
+.manual-presence-row:hover {
+    background:#39ff140a
+}
+.manual-presence-row strong,.manual-presence-row small {
+    display:block
+}
+.manual-presence-row strong {
+    color:var(--text);
+    font-size:.72rem
+}
+.manual-presence-row small {
+    margin-top:4px;
+    color:var(--muted);
+    font-size:.6rem
+}
+.manual-presence-row input {
+    width:19px;
+    height:19px;
+    accent-color:var(--neon);
+    justify-self:center
+}
 .agenda-grid {
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));
