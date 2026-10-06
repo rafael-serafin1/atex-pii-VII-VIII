@@ -203,6 +203,61 @@ button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,t
     background:var(--neon);
     box-shadow:0 0 5px var(--neon)
 }
+.admin-auth-trigger {
+    white-space:nowrap
+}
+.admin-access-dialog {
+    width:min(420px,calc(100% - 32px));
+    padding:22px;
+    border:1px solid var(--trace);
+    background:var(--base);
+    color:var(--text);
+    box-shadow:0 18px 60px #0009
+}
+.admin-access-dialog::backdrop {
+    background:#000c;
+    backdrop-filter:blur(4px)
+}
+.admin-access-dialog[open] {
+    animation:panel-in .18s ease-out
+}
+.admin-access-dialog h2 {
+    margin:0 0 10px;
+    color:var(--neon);
+    font:600 .9rem var(--display)
+}
+.admin-access-dialog form>p {
+    color:var(--muted);
+    font-size:.72rem;
+    line-height:1.6
+}
+.admin-access-dialog label span {
+    display:block;
+    margin-bottom:6px;
+    color:var(--muted);
+    font-size:.66rem;
+    letter-spacing:.08em
+}
+.admin-dialog-actions {
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:12px
+}
+.admin-dialog-actions .submit-button {
+    width:auto;
+    margin-top:0
+}
+.admin-dialog-actions .secondary-button {
+    min-height:44px;
+    padding:11px 14px;
+    border:1px solid var(--trace);
+    background:transparent;
+    color:var(--muted);
+    font:600 .7rem var(--display);
+    letter-spacing:.08em;
+    cursor:pointer
+}
 .main-content {
     position:relative;
     z-index:1;
@@ -650,6 +705,28 @@ textarea.input-field {
     color:var(--muted);
     font-size:.64rem
 }
+.course-lesson-list {
+    display:grid;
+    gap:10px;
+    margin:0;
+    padding:0;
+    list-style:none
+}
+.course-lesson-list li {
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    padding-top:9px;
+    border-top:1px solid var(--trace);
+    font-size:.68rem
+}
+.course-lesson-list strong {
+    color:var(--text);
+    font-weight:400
+}
+.course-lesson-list span,.agenda-empty {
+    color:var(--muted)
+}
 .calendar-icon,.clock-icon {
     position:relative;
     display:inline-block;
@@ -1026,6 +1103,7 @@ textarea.input-field {
         gap:6px
     }
 }
+
 @media(prefers-reduced-motion:reduce) {
     *,*::before,*::after {
         animation-duration:.01ms!important;
