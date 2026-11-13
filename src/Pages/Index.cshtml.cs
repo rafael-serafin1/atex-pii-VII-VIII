@@ -18,11 +18,11 @@ public class IndexModel : PageModel
 
     public IndexModel(AlunoRepository alunoRepository, CursoRepository cursoRepository, AulaRepository aulaRepository, PresencaRepository presencaRepository, ILogger<IndexModel> logger)
     {
-        _alunoRepository = alunoRepository;
-        _cursoRepository = cursoRepository;
-        _aulaRepository = aulaRepository;
+        _alunoRepository    = alunoRepository;
+        _cursoRepository    = cursoRepository;
+        _aulaRepository     = aulaRepository;
         _presencaRepository = presencaRepository;
-        _logger = logger;
+        _logger             = logger;
     }
 
     [BindProperty(SupportsGet = true)]
@@ -224,6 +224,7 @@ public class IndexModel : PageModel
             }
 
             var presentes = AlunosPresentes.ToHashSet();
+
             if (Observacoes.Any(item => !alunoIds.Contains(item.Key) || item.Value.Length > 150))
             {
                 ModelState.AddModelError(string.Empty, "Cada observação deve pertencer a um aluno e ter no máximo 150 caracteres.");
@@ -251,6 +252,10 @@ public class IndexModel : PageModel
             ModelState.AddModelError(string.Empty, "Não foi possível registrar a presença. Tente novamente.");
             CarregarDadosPresenca();
             return Page();
+        }
+        catch (NullReferenceException ex)
+        {
+            ModelState.AddModelError(ex.Message, "Não foi possível registrar a presença. Tente novamente mais tarde.");
         }
 
         CadastroConcluido = true;
