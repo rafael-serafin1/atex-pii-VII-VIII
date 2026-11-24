@@ -257,6 +257,10 @@ public class IndexModel : PageModel
         {
             ModelState.AddModelError(ex.Message, "Não foi possível registrar a presença. Tente novamente mais tarde.");
         }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError(ex.Message, "Não foi possível realizar essa ação.");
+        }
 
         CadastroConcluido = true;
         MensagemSucesso = "A chamada foi registrada com sucesso.";
