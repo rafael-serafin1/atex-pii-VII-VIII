@@ -28,6 +28,35 @@ namespace backend.repo
             cmd.ExecuteNonQuery();
         }
 
+        public List<RegistroPresencaAluno> GetRegistrosByAulaId(int idAula)
+        {
+            var registros = new List<RegistroPresencaAluno>();
+            using var conn = _connection.GetConnection();
+            const string query = """
+                SELECT a.nome, a.sobrenome, a.email, p.presente, p.observacoes
+                FROM dbo.presencas AS p
+                INNER JOIN dbo.alunos AS a ON a.id_aluno = p.id_aluno
+                WHERE p.id_aula = @IdAula
+                ORDER BY a.nome, a.sobrenome
+                """;
+
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@IdAula", idAula);
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                registros.Add(new RegistroPresencaAluno(
+                    reader.GetString(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    reader.GetBoolean(3),
+                    reader.IsDBNull(4) ? null : reader.GetString(4)));
+            }
+
+            return registros;
+        }
+
         public void SavePresencas(int idAula, IEnumerable<Presencas> presencas)
         {
             using var conn = _connection.GetConnection();

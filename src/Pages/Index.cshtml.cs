@@ -12,15 +12,17 @@ public class IndexModel : PageModel
     private readonly AlunoRepository _alunoRepository;
     private readonly CursoRepository _cursoRepository;
     private readonly AulaRepository _aulaRepository;
+    private readonly MatriculaRepository _matriculaRepository;
     private readonly PresencaRepository _presencaRepository;
 
     private readonly ILogger<IndexModel> _logger;
 
-    public IndexModel(AlunoRepository alunoRepository, CursoRepository cursoRepository, AulaRepository aulaRepository, PresencaRepository presencaRepository, ILogger<IndexModel> logger)
+    public IndexModel(AlunoRepository alunoRepository, CursoRepository cursoRepository, AulaRepository aulaRepository, MatriculaRepository matriculaRepository, PresencaRepository presencaRepository, ILogger<IndexModel> logger)
     {
         _alunoRepository    = alunoRepository;
         _cursoRepository    = cursoRepository;
         _aulaRepository     = aulaRepository;
+        _matriculaRepository = matriculaRepository;
         _presencaRepository = presencaRepository;
         _logger             = logger;
     }
@@ -38,17 +40,21 @@ public class IndexModel : PageModel
     public CadastroAula Aula { get; set; } = new();
 
     [BindProperty]
+    public CadastroMatricula Matricula { get; set; } = new();
+
+    [BindProperty(SupportsGet = true)]
     public int? AulaSelecionada { get; set; }
 
     [BindProperty]
     public List<int> AlunosPresentes { get; set; } = [];
 
     [BindProperty]
-    public Dictionary<int, string> Observacoes { get; set; } = [];
+    public Dictionary<int, string?>? Observacoes { get; set; } = [];
 
     public bool CadastroConcluido { get; private set; }
     public string MensagemSucesso { get; private set; } = string.Empty;
     public IReadOnlyList<CursoComAulas> AgendaCursos { get; private set; } = [];
+    public IReadOnlyList<RegistroPresencaAluno> RegistrosPresencaAula { get; private set; } = [];
     public IReadOnlyList<Alunos> AlunosCadastrados { get; private set; } = [];
     public IReadOnlyList<Aulas> AulasCadastradas { get; private set; } = [];
     public IReadOnlyList<Cursos> CursosCadastrados { get; private set; } = [];
@@ -62,6 +68,24 @@ public class IndexModel : PageModel
             try
             {
                 var aulas = _aulaRepository.GetAllAulas();
+
+                if (AulaSelecionada.HasValue)
+                {
+                    var aulaSelecionada = aulas.SingleOrDefault(aula => aula.Id == AulaSelecionada.Value);
+                    if (aulaSelecionada is null)
+                    {
+                        ModelState.AddModelError(string.Empty, "A aula selecionada não foi encontrada.");
+                    }
+                    else if (aulaSelecionada.DataAula >= DateTime.Now)
+                    {
+                        ModelState.AddModelError(string.Empty, "A lista de alunos estará disponível após o horário da aula.");
+                    }
+                    else
+                    {
+                        RegistrosPresencaAula = _presencaRepository.GetRegistrosByAulaId(aulaSelecionada.Id);
+                    }
+                }
+
                 AgendaCursos = _cursoRepository.GetAllCursos()
                     .Select(curso => new CursoComAulas(
                         curso,
@@ -82,6 +106,9 @@ public class IndexModel : PageModel
 
         if (Tela == "aula")
             CarregarCursos();
+
+        if (Tela == "matricula")
+            CarregarDadosMatricula();
 
         return Page();
     }
@@ -190,6 +217,62 @@ public class IndexModel : PageModel
         return Page();
     }
 
+    public IActionResult OnPostCadastrarMatricula()
+    {
+        Tela = "matricula";
+        ValidateOnly(Matricula, nameof(Matricula));
+
+        if (!ModelStateValidFor("matrícula"))
+        {
+            CarregarDadosMatricula();
+            return Page();
+        }
+
+        try
+        {
+            var alunos = _alunoRepository.GetAllAlunos();
+            var cursos = _cursoRepository.GetAllCursos();
+
+            if (!alunos.Any(aluno => aluno.Id == Matricula.IdAluno))
+            {
+                ModelState.AddModelError(nameof(Matricula.IdAluno), "Selecione um aluno válido.");
+                CarregarDadosMatricula();
+                return Page();
+            }
+
+            if (!cursos.Any(curso => curso.Id == Matricula.IdCurso))
+            {
+                ModelState.AddModelError(nameof(Matricula.IdCurso), "Selecione um curso válido.");
+                CarregarDadosMatricula();
+                return Page();
+            }
+
+            _matriculaRepository.CreateMatricula(new Matriculas(
+                0,
+                Matricula.IdAluno!.Value,
+                Matricula.IdCurso!.Value,
+                DateTime.Today));
+        }
+        catch (SqlException exception) when (exception.Number is 2601 or 2627)
+        {
+            _logger.LogWarning(exception, "Tentativa de matricular novamente um aluno no mesmo curso");
+            ModelState.AddModelError(nameof(Matricula.IdAluno), "Este aluno já está matriculado neste curso.");
+            CarregarDadosMatricula();
+            return Page();
+        }
+        catch (SqlException exception)
+        {
+            _logger.LogError(exception, "Falha ao cadastrar matrícula no banco de dados");
+            ModelState.AddModelError(string.Empty, "Não foi possível cadastrar a matrícula. Tente novamente.");
+            CarregarDadosMatricula();
+            return Page();
+        }
+
+        CadastroConcluido = true;
+        MensagemSucesso = "A matrícula foi cadastrada com sucesso. O aluno estará disponível na chamada das aulas deste curso.";
+        return Page();
+    }
+
     public IActionResult OnPostMarcarPresenca()
     {
         Tela = "presenca";
@@ -206,11 +289,19 @@ public class IndexModel : PageModel
 
         try
         {
-            var alunos = _alunoRepository.GetAllAlunos();
             var aulas = _aulaRepository.GetAllAulas();
-            if (!aulas.Any(aula => aula.Id == AulaSelecionada.Value))
+            var aulaSelecionada = aulas.SingleOrDefault(aula => aula.Id == AulaSelecionada.Value);
+            if (aulaSelecionada is null)
             {
                 ModelState.AddModelError(nameof(AulaSelecionada), "A aula selecionada não existe.");
+                CarregarDadosPresenca();
+                return Page();
+            }
+
+            var alunos = _matriculaRepository.GetAlunosByAulaId(aulaSelecionada.Id);
+            if (alunos.Count == 0)
+            {
+                ModelState.AddModelError(string.Empty, "Não há alunos pendentes de chamada nesta aula.");
                 CarregarDadosPresenca();
                 return Page();
             }
@@ -224,8 +315,9 @@ public class IndexModel : PageModel
             }
 
             var presentes = AlunosPresentes.ToHashSet();
+            var observacoes = Observacoes ?? [];
 
-            if (Observacoes.Any(item => !alunoIds.Contains(item.Key) || item.Value.Length > 150))
+            if (observacoes.Any(item => !alunoIds.Contains(item.Key) || item.Value is { Length: > 150 }))
             {
                 ModelState.AddModelError(string.Empty, "Cada observação deve pertencer a um aluno e ter no máximo 150 caracteres.");
                 CarregarDadosPresenca();
@@ -239,12 +331,27 @@ public class IndexModel : PageModel
                 presentes.Contains(aluno.Id),
                 presentes.Contains(aluno.Id)
                     ? string.Empty
-                    : (Observacoes.TryGetValue(aluno.Id, out var observacao)
+                    : (observacoes.TryGetValue(aluno.Id, out var observacao) &&
+                        !string.IsNullOrWhiteSpace(observacao)
                         ? observacao.Trim()
                         : string.Empty),
                 DateTime.Now));
 
             _presencaRepository.SavePresencas(AulaSelecionada.Value, registros);
+        }
+        catch (NullReferenceException exception)
+        {
+            _logger.LogError(exception, "Falha ao tentar registrar presença no banco de dados");
+            ModelState.AddModelError(string.Empty, $"Não foi possível registrar a presença. Tente novamente.");
+            CarregarDadosPresenca();
+            return Page();
+        }
+        catch (SqlException exception) when (exception.Number == 50004)
+        {
+            _logger.LogWarning(exception, "Tentativa de registrar presença antes do horário da aula");
+            ModelState.AddModelError(string.Empty, "Não é permitido registrar a chamada antes do horário da aula. Aguarde o início da aula e tente novamente.");
+            CarregarDadosPresenca();
+            return Page();
         }
         catch (SqlException exception)
         {
@@ -253,15 +360,6 @@ public class IndexModel : PageModel
             CarregarDadosPresenca();
             return Page();
         }
-        catch (NullReferenceException ex)
-        {
-            ModelState.AddModelError(ex.Message, "Não foi possível registrar a presença. Tente novamente mais tarde.");
-        }
-        catch (Exception ex)
-        {
-            ModelState.AddModelError(ex.Message, "Não foi possível realizar essa ação.");
-        }
-
         CadastroConcluido = true;
         MensagemSucesso = "A chamada foi registrada com sucesso.";
         return Page();
@@ -269,7 +367,7 @@ public class IndexModel : PageModel
 
     private void NormalizarTela()
     {
-        if (Tela is not ("aluno" or "curso" or "aula" or "agenda" or "presenca"))
+        if (Tela is not ("aluno" or "curso" or "aula" or "agenda" or "presenca" or "matricula"))
             Tela = "aluno";
     }
 
@@ -277,16 +375,40 @@ public class IndexModel : PageModel
     {
         try
         {
-            AlunosCadastrados = _alunoRepository.GetAllAlunos();
             AulasCadastradas = _aulaRepository.GetAllAulas()
                 .OrderByDescending(aula => aula.DataAula)
                 .ToList();
+
+            if (AulaSelecionada.HasValue &&
+                AulasCadastradas.Any(aula => aula.Id == AulaSelecionada.Value))
+            {
+                AlunosCadastrados = _matriculaRepository.GetAlunosByAulaId(AulaSelecionada.Value);
+            }
         }
 
         catch (SqlException exception)
         {
             _logger.LogError(exception, "Falha ao carregar alunos e aulas para registro de presença");
             ModelState.AddModelError(string.Empty, "Não foi possível carregar os dados da presença. Tente novamente mais tarde.");
+        }
+    }
+
+    private void CarregarDadosMatricula()
+    {
+        try
+        {
+            AlunosCadastrados = _alunoRepository.GetAllAlunos()
+                .OrderBy(aluno => aluno.Nome)
+                .ThenBy(aluno => aluno.Sobrenome)
+                .ToList();
+            CursosCadastrados = _cursoRepository.GetAllCursos()
+                .OrderBy(curso => curso.Nome)
+                .ToList();
+        }
+        catch (SqlException exception)
+        {
+            _logger.LogError(exception, "Falha ao carregar alunos e cursos para cadastro de matrícula");
+            ModelState.AddModelError(string.Empty, "Não foi possível carregar os dados da matrícula. Tente novamente mais tarde.");
         }
     }
 
@@ -361,6 +483,15 @@ public class IndexModel : PageModel
         [Required(ErrorMessage = "Campo obrigatório")]
         [DataType(DataType.DateTime)]
         public DateTime? DataAula { get; set; }
+    }
+
+    public sealed class CadastroMatricula
+    {
+        [Required(ErrorMessage = "Selecione um aluno")]
+        public int? IdAluno { get; set; }
+
+        [Required(ErrorMessage = "Selecione um curso")]
+        public int? IdCurso { get; set; }
     }
 
     public sealed record CursoComAulas(Cursos Curso, IReadOnlyList<Aulas> Aulas);

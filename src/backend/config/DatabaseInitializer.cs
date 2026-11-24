@@ -1,4 +1,5 @@
 using Microsoft.Data.SqlClient;
+using System.Text.RegularExpressions;
 
 namespace backend.config;
 
@@ -47,10 +48,22 @@ public sealed class DatabaseInitializer
         var schema = ReadSchemaScript();
         using var database = new SqlConnection(databaseConnection.ConnectionString);
         database.Open();
-        using var schemaCommand = new SqlCommand(schema, database);
-        schemaCommand.ExecuteNonQuery();
+        var batches = Regex.Split(
+            schema,
+            @"^[\t ]*GO[\t ]*(?:--[^\r\n]*)?[\t \r]*$",
+            RegexOptions.Multiline | RegexOptions.IgnoreCase);
 
-        _logger.LogInformation("Banco de dados {DatabaseName} verificado e schema aplicado.", databaseName);
+        foreach (var batch in batches)
+        {
+            if (string.IsNullOrWhiteSpace(batch))
+                continue;
+
+            using var schemaCommand = new SqlCommand(batch, database);
+            schemaCommand.ExecuteNonQuery();
+        }
+
+        string DatabaseName = "atexpiiVIIVIII";
+        _logger.LogInformation($"Banco de dados {DatabaseName} verificado e schema aplicado.", databaseName);
     }
 
     private static string ReadSchemaScript()

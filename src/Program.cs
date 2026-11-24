@@ -10,6 +10,7 @@ builder.Services.AddSingleton<DatabaseInitializer>();
 builder.Services.AddScoped<AlunoRepository>();
 builder.Services.AddScoped<CursoRepository>();
 builder.Services.AddScoped<AulaRepository>();
+builder.Services.AddScoped<MatriculaRepository>();
 builder.Services.AddScoped<PresencaRepository>();
 var app = builder.Build();
 
